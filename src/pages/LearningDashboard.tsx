@@ -109,6 +109,9 @@ export default function LearningDashboard() {
 
     // Mobile UI States
     const [isTreeOpen, setIsTreeOpen] = useState(false);
+    const [showCourseTree, setShowCourseTree] = useState(false);
+    const [treeSearch, setTreeSearch] = useState('');
+    const [treeExpandedStage, setTreeExpandedStage] = useState<number | null>(null);
 
     // Notes Data States
     const [draftNote, setDraftNote] = useState<Record<string, string>>({});
@@ -254,6 +257,112 @@ export default function LearningDashboard() {
         }
     };
 
+    // Full Mindmap PDF Download
+    const handleDownloadMindmap = () => {
+        const diffColor: Record<string, string> = {
+            Beginner: '#10b981',
+            Intermediate: '#f59e0b',
+            Advanced: '#ef4444',
+        };
+        const stageColors = [
+            '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981',
+            '#0ea5e9', '#f97316', '#14b8a6', '#a855f7', '#ef4444',
+            '#6366f1', '#84cc16', '#d946ef', '#22d3ee', '#fb923c'
+        ];
+
+        let stageHTML = '';
+        treeData.forEach((stage, si) => {
+            const sc = stageColors[si % stageColors.length];
+            let sectionsHTML = '';
+            stage.sections.forEach((sec: any) => {
+                const qList = sec.questions.map((q: any) => {
+                    const dc = diffColor[q.DIFFICULTY] || '#94a3b8';
+                    return `<div class="q-row">
+                        <span class="q-id">${q.QID}</span>
+                        <span class="q-text">${q.QUESTION}</span>
+                        <span class="q-diff" style="color:${dc};border-color:${dc}">${q.DIFFICULTY}</span>
+                    </div>`;
+                }).join('');
+                sectionsHTML += `<div class="section-block">
+                    <div class="section-title">📂 ${sec.name} <span class="sec-count">${sec.questions.length} questions</span></div>
+                    <div class="q-list">${qList}</div>
+                </div>`;
+            });
+            const stageTotal = stage.sections.reduce((a: number, s: any) => a + s.questions.length, 0);
+            stageHTML += `<div class="stage-card" style="border-left-color:${sc}">
+                <div class="stage-header" style="background:${sc}18;">
+                    <div class="stage-num" style="background:${sc}">STAGE ${stage.id}</div>
+                    <div class="stage-name">${stage.name}</div>
+                    <div class="stage-meta">${stage.sections.length} sections &bull; ${stageTotal} questions</div>
+                </div>
+                ${sectionsHTML}
+            </div>`;
+        });
+
+        const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Trading Mastery — Course Mindmap</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@700;800&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:#0a0a0f;color:#f8fafc;padding:40px 32px;max-width:960px;margin:0 auto;}
+  .cover{text-align:center;padding:48px 0 40px;border-bottom:1px solid #1e293b;margin-bottom:40px;}
+  .cover-icon{font-size:3rem;margin-bottom:12px;}
+  .cover h1{font-family:'Poppins',sans-serif;font-size:2.4rem;background:linear-gradient(135deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;}
+  .cover-sub{color:#64748b;font-size:1rem;}
+  .cover-meta{margin-top:14px;font-size:0.85rem;color:#475569;}
+  .stage-card{margin-bottom:36px;border-left:4px solid #3b82f6;border-radius:0 12px 12px 0;overflow:hidden;background:#12121a;}
+  .stage-header{display:flex;align-items:center;gap:14px;padding:14px 20px;flex-wrap:wrap;}
+  .stage-num{background:#3b82f6;color:#fff;font-weight:700;font-size:0.72rem;padding:4px 10px;border-radius:16px;letter-spacing:1px;white-space:nowrap;}
+  .stage-name{font-family:'Poppins',sans-serif;font-size:1.05rem;font-weight:700;color:#f1f5f9;flex:1;}
+  .stage-meta{font-size:0.75rem;color:#64748b;white-space:nowrap;}
+  .section-block{padding:12px 20px 8px 20px;border-top:1px solid #1e293b;}
+  .section-title{font-size:0.8rem;font-weight:600;color:#94a3b8;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+  .sec-count{background:#1e293b;color:#64748b;padding:2px 8px;border-radius:8px;font-size:0.7rem;}
+  .q-list{display:flex;flex-direction:column;gap:4px;padding-left:8px;}
+  .q-row{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:6px;background:#0d1524;border:1px solid #1e293b;}
+  .q-id{font-size:0.7rem;font-weight:700;color:#3b82f6;background:rgba(59,130,246,0.1);padding:2px 7px;border-radius:8px;white-space:nowrap;}
+  .q-text{flex:1;font-size:0.82rem;color:#cbd5e1;line-height:1.4;}
+  .q-diff{font-size:0.65rem;font-weight:600;padding:2px 8px;border-radius:10px;border:1px solid;white-space:nowrap;}
+  .footer{text-align:center;color:#334155;font-size:0.78rem;margin-top:40px;padding-top:20px;border-top:1px solid #1e293b;}
+  @media print{
+    body{background:#fff;color:#111;padding:20px;}
+    .stage-card{background:#f8fafc;border-left-width:4px;page-break-inside:avoid;}
+    .stage-header{background:#f1f5f9 !important;}
+    .q-row{background:#fff;border-color:#e2e8f0;}
+    .q-text{color:#1e293b;}
+    .section-title{color:#475569;}
+    .cover h1{-webkit-text-fill-color:#1d4ed8;}
+    .footer{color:#94a3b8;}
+  }
+</style>
+</head>
+<body>
+  <div class="cover">
+    <div class="cover-icon">🌳</div>
+    <h1>Trading Mastery</h1>
+    <div class="cover-sub">Complete Course Mindmap — All Stages &amp; Questions</div>
+    <div class="cover-meta">${treeData.length} Stages &bull; ${questions.length} Questions &bull; Generated ${new Date().toLocaleDateString('en-IN', { dateStyle: 'full' })}</div>
+  </div>
+  ${stageHTML}
+  <div class="footer">Trading Mastery &mdash; Your Complete Learning Roadmap</div>
+</body>
+</html>`;
+
+        // Use Blob download — window.open is blocked on mobile browsers
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `trading-mastery-mindmap-${new Date().toISOString().slice(0, 10)}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    };
+
     const handleDownloadNotes = () => {
         const noteKeys = Object.keys(savedNotes).filter(k => savedNotes[k].length > 0);
         if (noteKeys.length === 0) {
@@ -329,13 +438,16 @@ export default function LearningDashboard() {
 </body>
 </html>`;
 
-        const printWin = window.open('', '_blank', 'width=900,height=700');
-        if (printWin) {
-            printWin.document.write(html);
-            printWin.document.close();
-            printWin.focus();
-            setTimeout(() => printWin.print(), 800);
-        }
+        // Use Blob download — window.open is blocked on mobile browsers
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `trading-mastery-notes-${new Date().toISOString().slice(0, 10)}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
 
     if (!currentQ) return <div style={{ padding: 24 }}>Loading...</div>;
@@ -364,13 +476,214 @@ export default function LearningDashboard() {
                         </button>
                     </div>
                 </div>
+                {/* Desktop: Download Mindmap */}
+                <button
+                    className="desktop-only"
+                    onClick={handleDownloadMindmap}
+                    title="Download full course mindmap as PDF"
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        padding: '8px 16px', borderRadius: '8px',
+                        background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)',
+                        color: 'var(--accent-primary)', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer'
+                    }}
+                >
+                    <Download size={15} /> Download Mindmap
+                </button>
             </div>
 
             <div className="learning-container animate-fade-in relative-container">
-                {/* Mobile Tree Toggle */}
-                <button className="mobile-only tree-toggle-btn glass-panel" onClick={() => setIsTreeOpen(true)}>
-                    <List size={18} /> Course Content
-                </button>
+                {/* Mobile Buttons Row */}
+                <div className="mobile-only" style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                    <button className="tree-toggle-btn glass-panel" style={{ flex: 1, margin: 0 }} onClick={() => setShowCourseTree(true)}>
+                        <List size={18} /> Course Content
+                    </button>
+                    <button className="tree-toggle-btn glass-panel" style={{ margin: 0, gap: '6px', padding: '12px', background: 'rgba(59,130,246,0.08)', borderColor: 'rgba(59,130,246,0.2)', color: 'var(--accent-primary)' }} onClick={handleDownloadMindmap} title="Download full course mindmap as PDF">
+                        <Download size={16} /> Mindmap
+                    </button>
+                </div>
+
+                {/* Full-Screen Course Tree Modal (Mobile) */}
+                {showCourseTree && (
+                    <div className="course-tree-modal" style={{
+                        position: 'fixed', inset: 0, zIndex: 200,
+                        background: 'var(--bg-primary)',
+                        overflowY: 'auto',
+                        WebkitOverflowScrolling: 'touch' as any,
+                        display: 'flex', flexDirection: 'column'
+                    }}>
+                        {/* Modal Header */}
+                        <div style={{
+                            position: 'sticky', top: 0, zIndex: 10,
+                            background: 'var(--bg-primary)',
+                            borderBottom: '1px solid var(--glass-border)',
+                            padding: '14px 16px',
+                            display: 'flex', flexDirection: 'column', gap: '10px'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div>
+                                    <div style={{ fontSize: '1rem', fontWeight: 700 }}>🌳 Course Content</div>
+                                    <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginTop: '2px' }}>
+                                        {treeData.length} stages · {questions.length} questions
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <button
+                                        onClick={handleDownloadMindmap}
+                                        style={{
+                                            background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)',
+                                            borderRadius: '8px', padding: '8px 12px', color: 'var(--accent-primary)',
+                                            fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer'
+                                        }}
+                                    >
+                                        <Download size={14} /> PDF
+                                    </button>
+                                    <button onClick={() => setShowCourseTree(false)} style={{
+                                        background: 'var(--bg-tertiary)', border: 'none', borderRadius: '50%',
+                                        width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                                    }}>
+                                        <X size={18} color="var(--text-secondary)" />
+                                    </button>
+                                </div>
+                            </div>
+                            {/* Search */}
+                            <input
+                                type="text"
+                                placeholder="Search questions..."
+                                value={treeSearch}
+                                onChange={e => setTreeSearch(e.target.value)}
+                                style={{
+                                    width: '100%', padding: '9px 14px',
+                                    background: 'var(--bg-tertiary)', border: '1px solid var(--glass-border)',
+                                    borderRadius: '8px', color: 'var(--text-primary)',
+                                    fontSize: '0.875rem', fontFamily: 'inherit', outline: 'none'
+                                }}
+                            />
+                            {/* Progress */}
+                            <div>
+                                <div style={{ height: '4px', background: 'var(--bg-tertiary)', borderRadius: '2px', overflow: 'hidden' }}>
+                                    <div style={{ height: '100%', width: `${(currentIndex / questions.length) * 100}%`, background: 'var(--accent-gradient)' }} />
+                                </div>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', marginTop: '4px', textAlign: 'right' }}>
+                                    {currentIndex} / {questions.length} complete
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Stage List */}
+                        <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {treeData.map((stage) => {
+                                const filtered = treeSearch.trim()
+                                    ? stage.sections.map((sec: any) => ({
+                                        ...sec,
+                                        questions: sec.questions.filter((q: any) =>
+                                            q.QUESTION.toLowerCase().includes(treeSearch.toLowerCase()) ||
+                                            q.QID.toLowerCase().includes(treeSearch.toLowerCase())
+                                        )
+                                    })).filter((sec: any) => sec.questions.length > 0)
+                                    : stage.sections;
+
+                                if (treeSearch.trim() && filtered.length === 0) return null;
+
+                                const isExpanded = treeSearch.trim() ? true : treeExpandedStage === stage.id;
+                                const stageTotal = stage.sections.reduce((a: number, s: any) => a + s.questions.length, 0);
+
+                                return (
+                                    <div key={stage.id} style={{
+                                        background: 'var(--bg-secondary)',
+                                        borderRadius: '10px',
+                                        border: `1px solid ${stage.id === currentQ.stageId ? 'rgba(59,130,246,0.3)' : 'var(--glass-border)'}`,
+                                        overflow: 'hidden'
+                                    }}>
+                                        {/* Stage Header */}
+                                        <div
+                                            onClick={() => setTreeExpandedStage(isExpanded ? null : stage.id)}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: '10px',
+                                                padding: '12px 14px', cursor: 'pointer',
+                                                background: stage.id === currentQ.stageId ? 'rgba(59,130,246,0.08)' : 'transparent'
+                                            }}
+                                        >
+                                            <span style={{
+                                                fontSize: '0.65rem', fontWeight: 700, padding: '3px 8px',
+                                                borderRadius: '10px', background: 'var(--accent-gradient)',
+                                                color: 'white', whiteSpace: 'nowrap'
+                                            }}>S{stage.id}</span>
+                                            <span style={{ flex: 1, fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                                {stage.name}
+                                            </span>
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>{stageTotal}Q</span>
+                                            {stage.id === currentQ.stageId
+                                                ? <CheckCircle2 size={14} color="var(--accent-primary)" />
+                                                : <ChevronRight size={14} color="var(--text-tertiary)" style={{ transform: isExpanded ? 'rotate(90deg)' : 'none' }} />
+                                            }
+                                        </div>
+
+                                        {/* Sections + Questions */}
+                                        {isExpanded && (
+                                            <div style={{ borderTop: '1px solid var(--glass-border)' }}>
+                                                {filtered.map((sec: any) => (
+                                                    <div key={sec.name} style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                                                        {/* Section title */}
+                                                        <div style={{
+                                                            padding: '8px 14px 6px 14px',
+                                                            fontSize: '0.72rem', fontWeight: 700,
+                                                            color: 'var(--text-tertiary)',
+                                                            textTransform: 'uppercase', letterSpacing: '0.05em',
+                                                            background: 'var(--bg-tertiary)'
+                                                        }}>
+                                                            📂 {sec.name}
+                                                            <span style={{ marginLeft: '6px', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>
+                                                                ({sec.questions.length})
+                                                            </span>
+                                                        </div>
+                                                        {/* Questions */}
+                                                        {sec.questions.map((q: any) => {
+                                                            const isActive = currentIndex === q.globalIndex;
+                                                            const diffColors: Record<string, string> = { Beginner: '#10b981', Intermediate: '#f59e0b', Advanced: '#ef4444' };
+                                                            return (
+                                                                <div
+                                                                    key={q.QID}
+                                                                    onClick={() => {
+                                                                        setCurrentIndex(q.globalIndex);
+                                                                        setShowCourseTree(false);
+                                                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                                    }}
+                                                                    style={{
+                                                                        display: 'flex', alignItems: 'center', gap: '8px',
+                                                                        padding: '9px 14px',
+                                                                        cursor: 'pointer',
+                                                                        background: isActive ? 'rgba(59,130,246,0.1)' : 'transparent',
+                                                                        borderLeft: isActive ? '3px solid var(--accent-primary)' : '3px solid transparent',
+                                                                        borderBottom: '1px solid var(--glass-border)'
+                                                                    }}
+                                                                >
+                                                                    <span style={{
+                                                                        fontSize: '0.65rem', fontWeight: 700,
+                                                                        color: 'var(--accent-primary)', minWidth: '28px', flexShrink: 0
+                                                                    }}>{q.QID}</span>
+                                                                    <span style={{
+                                                                        flex: 1, fontSize: '0.82rem',
+                                                                        color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                                                                        lineHeight: 1.4
+                                                                    }}>{q.QUESTION}</span>
+                                                                    <span style={{
+                                                                        fontSize: '0.6rem', fontWeight: 600, flexShrink: 0,
+                                                                        color: diffColors[q.DIFFICULTY] || 'var(--text-tertiary)'
+                                                                    }}>●</span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
 
                 {/* Mobile Tree Overlay */}
                 {isTreeOpen && <div className="mobile-tree-overlay" onClick={() => setIsTreeOpen(false)} />}
