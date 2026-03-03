@@ -1,7 +1,7 @@
 .learning-page-wrapper {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - var(--header-height) - 48px);
+    min-height: calc(100vh - var(--header-height) - 48px);
 }
 
 .learning-container {
@@ -463,17 +463,19 @@
 
     .learning-page-wrapper {
         height: auto;
-        min-height: calc(100vh - var(--header-height) - 48px);
+        min-height: 100vh;
     }
 
     .learning-container {
         flex-direction: column;
         gap: 16px;
+        height: auto;
     }
 
     .reading-split {
         grid-template-columns: 1fr;
         overflow: visible;
+        height: auto;
     }
 
     /* Transform Sidebar into Drawer */
@@ -532,8 +534,10 @@
     }
 
     .question-card {
-        padding: 24px;
+        padding: 20px;
         overflow-y: visible;
+        /* Let the page scroll naturally on mobile */
+        height: auto;
     }
 
     .notes-panel {
