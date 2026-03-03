@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { ChevronRight, CheckCircle2, Circle, Clock, AlertCircle, Lightbulb, ChevronLeft, Save, ChevronDown, List, X, Sun, Moon, Download, Trash2, LogOut, Pencil, Copy } from 'lucide-react';
+import { ChevronRight, CheckCircle2, Circle, Clock, AlertCircle, Lightbulb, ChevronLeft, Save, List, X, Sun, Moon, Download, Trash2, LogOut, Pencil, Copy } from 'lucide-react';
 import questionsFile from '../data/questions.json';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -109,7 +109,6 @@ export default function LearningDashboard() {
 
     // Mobile UI States
     const [isTreeOpen, setIsTreeOpen] = useState(false);
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     // Notes Data States
     const [draftNote, setDraftNote] = useState<Record<string, string>>({});
@@ -241,6 +240,7 @@ export default function LearningDashboard() {
             setShowQuizAns(false);
             setEditingNoteId(null);
             setNotesSearch('');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
@@ -250,11 +250,9 @@ export default function LearningDashboard() {
             setShowQuizAns(false);
             setEditingNoteId(null);
             setNotesSearch('');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
-
-    const [timeRange, setTimeRange] = useState('This Week');
-    const timeRanges = ['This Week', 'This Month', 'Last 3M', 'Custom Range'];
 
     const handleDownloadNotes = () => {
         const noteKeys = Object.keys(savedNotes).filter(k => savedNotes[k].length > 0);
@@ -347,9 +345,6 @@ export default function LearningDashboard() {
             <div className="learning-top-bar glass-panel flex-between animate-fade-in" style={{ marginBottom: '24px', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Learning Activity</h2>
-                    <div style={{ padding: '4px 12px', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--accent-primary)', borderRadius: '16px', fontSize: '0.875rem', fontWeight: 500 }}>
-                        +120 XP
-                    </div>
                     <button
                         onClick={toggleTheme}
                         style={{ background: 'var(--bg-tertiary)', padding: '8px', borderRadius: '50%', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -368,55 +363,6 @@ export default function LearningDashboard() {
                             <LogOut size={16} />
                         </button>
                     </div>
-                </div>
-
-                {/* Desktop time filters */}
-                <div className="time-range-filters desktop-only" style={{ display: 'flex', gap: '8px', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: 'var(--radius-sm)' }}>
-                    {timeRanges.map(range => (
-                        <button
-                            key={range}
-                            onClick={() => setTimeRange(range)}
-                            style={{
-                                padding: '6px 16px',
-                                border: 'none',
-                                background: timeRange === range ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-                                color: timeRange === range ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                                borderRadius: '4px',
-                                fontSize: '0.875rem',
-                                fontWeight: timeRange === range ? 600 : 500,
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease'
-                            }}
-                        >
-                            {range}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Mobile time filter dropdown */}
-                <div className="mobile-only custom-dropdown-container">
-                    <button
-                        className="custom-dropdown-btn"
-                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    >
-                        {timeRange} <ChevronDown size={14} />
-                    </button>
-                    {isDropdownOpen && (
-                        <div className="custom-dropdown-menu glass-panel">
-                            {timeRanges.map(range => (
-                                <div
-                                    className={`dropdown-item ${timeRange === range ? 'active' : ''}`}
-                                    key={range}
-                                    onClick={() => {
-                                        setTimeRange(range);
-                                        setIsDropdownOpen(false);
-                                    }}
-                                >
-                                    {range}
-                                </div>
-                            ))}
-                        </div>
-                    )}
                 </div>
             </div>
 

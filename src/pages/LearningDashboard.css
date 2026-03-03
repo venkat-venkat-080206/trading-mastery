@@ -486,13 +486,14 @@
         max-width: 85vw;
         z-index: 100;
         background: var(--bg-primary);
-        /* Solid background to prevent overlap visibility */
         box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
         transform: translateX(-100%);
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         border-radius: 0;
         border-right: 1px solid var(--glass-border);
         overflow-y: auto;
+        will-change: transform;
+        -webkit-overflow-scrolling: touch;
     }
 
     .stage-navigator.mobile-open {
@@ -504,28 +505,16 @@
     }
 
     .learning-top-bar {
-        padding: 16px !important;
-        gap: 16px;
-        flex-direction: column;
-        align-items: flex-start !important;
+        padding: 12px 16px !important;
+        gap: 12px;
+        flex-direction: row;
+        align-items: center !important;
+        flex-wrap: wrap;
     }
 
     .learning-top-bar>div:first-child {
         width: 100%;
         justify-content: space-between;
-    }
-
-    .custom-dropdown-container {
-        width: 100%;
-    }
-
-    .custom-dropdown-btn {
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .custom-dropdown-menu {
-        width: 100%;
     }
 
     .q-title {
@@ -548,6 +537,7 @@
     }
 
     .notes-panel {
-        height: 500px;
+        height: auto;
+        min-height: 400px;
     }
 }
