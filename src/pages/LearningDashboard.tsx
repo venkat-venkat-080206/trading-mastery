@@ -44,6 +44,24 @@ export default function LearningDashboard() {
         setQuestions(questionsFile as Question[]);
     }, []);
 
+    // Restore saved progress from localStorage when user + questions are ready
+    useEffect(() => {
+        if (!user || questions.length === 0) return;
+        const saved = localStorage.getItem(`progress_${user.id}`);
+        if (saved !== null) {
+            const idx = parseInt(saved, 10);
+            if (!isNaN(idx) && idx >= 0 && idx < questions.length) {
+                setCurrentIndex(idx);
+            }
+        }
+    }, [user, questions]);
+
+    // Save progress to localStorage whenever currentIndex changes
+    useEffect(() => {
+        if (!user || questions.length === 0) return;
+        localStorage.setItem(`progress_${user.id}`, String(currentIndex));
+    }, [currentIndex, user, questions.length]);
+
     // Fetch notes from Supabase
     useEffect(() => {
         const fetchNotes = async () => {
@@ -112,6 +130,21 @@ export default function LearningDashboard() {
     const [showCourseTree, setShowCourseTree] = useState(false);
     const [treeSearch, setTreeSearch] = useState('');
     const [treeExpandedStage, setTreeExpandedStage] = useState<number | null>(null);
+
+    // Lock body scroll when mobile sidebar/modal is open
+    useEffect(() => {
+        if (isTreeOpen || showCourseTree) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none';
+        } else {
+            document.body.style.overflow = '';
+            document.body.style.touchAction = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+            document.body.style.touchAction = '';
+        };
+    }, [isTreeOpen, showCourseTree]);
 
     // Notes Data States
     const [draftNote, setDraftNote] = useState<Record<string, string>>({});
